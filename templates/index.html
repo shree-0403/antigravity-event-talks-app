@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Explorer</title>
+    <!-- Import Outfit Typography from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Local styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="logo-container">
+                <div class="logo-icon"></div>
+                <h1>BigQuery <span class="gradient-text">Release Explorer</span></h1>
+            </div>
+            <div class="controls">
+                <button id="refresh-btn" class="btn btn-primary" title="Refresh Release Notes">
+                    <span class="btn-text">Refresh</span>
+                    <span class="spinner" id="loading-spinner"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <main class="app-main">
+            <!-- Filter Bar -->
+            <section class="filter-section">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search updates (e.g., Gemini, BQML)..." autocomplete="off">
+                </div>
+                <div class="filter-chips">
+                    <button class="chip active" data-type="all">All</button>
+                    <button class="chip" data-type="Feature">Features</button>
+                    <button class="chip" data-type="Change">Changes</button>
+                    <button class="chip" data-type="Issue">Issues</button>
+                    <button class="chip" data-type="Announcement">Announcements</button>
+                    <button class="chip" data-type="Breaking">Breaking</button>
+                </div>
+            </section>
+
+            <!-- Grid of Cards -->
+            <section class="content-section">
+                <div id="error-message" class="error-container hidden">
+                    <p id="error-text"></p>
+                </div>
+                <div id="releases-grid" class="releases-grid">
+                    <!-- Dynamic release cards will be injected here securely using JS -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Floating Action Bar for Selected Tweet -->
+        <div id="tweet-action-bar" class="tweet-action-bar hidden">
+            <div class="action-bar-content">
+                <div class="selected-info">
+                    <span class="label">Selected Update:</span>
+                    <span class="selection-preview" id="selection-preview-text"></span>
+                </div>
+                <div class="action-buttons">
+                    <button id="cancel-selection-btn" class="btn btn-secondary">Cancel</button>
+                    <a id="tweet-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-tweet">
+                        <svg class="twitter-icon" viewBox="0 0 24 24" width="18" height="18">
+                            <path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        Tweet this Update
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Local app logic -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
