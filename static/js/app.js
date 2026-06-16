@@ -170,11 +170,24 @@ document.addEventListener('DOMContentLoaded', () => {
             copyBtn.className = 'btn-copy';
             copyBtn.setAttribute('title', 'Copy Update to Clipboard');
 
-            const svgDoc = new DOMParser().parseFromString(
-                '<svg xmlns="http://www.w3.org/2005/svg" viewBox="0 0 24 24" width="14" height="14" style="fill: currentColor; vertical-align: middle;"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>', 
-                'image/svg+xml'
-            );
-            copyBtn.appendChild(svgDoc.documentElement);
+            // Helper to build SVGs using namespace to guarantee rendering in HTML
+            function buildSVG(pathD, color = 'currentColor') {
+                const svg = document.createElementNS("http://www.w3.org/2005/svg", "svg");
+                svg.setAttribute("viewBox", "0 0 24 24");
+                svg.setAttribute("width", "14");
+                svg.setAttribute("height", "14");
+                svg.style.fill = color;
+                svg.style.verticalAlign = "middle";
+                const path = document.createElementNS("http://www.w3.org/2005/svg", "path");
+                path.setAttribute("d", pathD);
+                svg.appendChild(path);
+                return svg;
+            }
+
+            const copyIconPath = "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z";
+            const checkIconPath = "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
+
+            copyBtn.appendChild(buildSVG(copyIconPath));
 
             copyBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -183,17 +196,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 navigator.clipboard.writeText(textToCopy).then(() => {
                     copyBtn.classList.add('copied');
-                    copyBtn.replaceChildren();
-                    const checkSvgDoc = new DOMParser().parseFromString(
-                        '<svg xmlns="http://www.w3.org/2005/svg" viewBox="0 0 24 24" width="14" height="14" style="fill: var(--color-feature); vertical-align: middle;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
-                        'image/svg+xml'
-                    );
-                    copyBtn.appendChild(checkSvgDoc.documentElement);
+                    copyBtn.replaceChildren(buildSVG(checkIconPath, "var(--color-feature)"));
                     
                     setTimeout(() => {
                         copyBtn.classList.remove('copied');
-                        copyBtn.replaceChildren();
-                        copyBtn.appendChild(svgDoc.documentElement);
+                        copyBtn.replaceChildren(buildSVG(copyIconPath));
                     }, 1500);
                 }).catch(err => {
                     console.error('Failed to copy: ', err);
