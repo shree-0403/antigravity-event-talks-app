@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectionPreviewText = document.getElementById('selection-preview-text');
     const cancelSelectionBtn = document.getElementById('cancel-selection-btn');
     const tweetBtn = document.getElementById('tweet-btn');
+    const exportCsvBtn = document.getElementById('export-csv-btn');
 
     // App State
     let allReleases = [];
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     cancelSelectionBtn.addEventListener('click', clearSelection);
+    exportCsvBtn.addEventListener('click', exportToCSV);
 
     // Fetch releases from Python backend
     async function fetchReleases() {
@@ -161,8 +163,48 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             badge.textContent = release.type;
 
+            const actionsContainer = document.createElement('div');
+            actionsContainer.className = 'card-header-actions';
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'btn-copy';
+            copyBtn.setAttribute('title', 'Copy Update to Clipboard');
+
+            const svgDoc = new DOMParser().parseFromString(
+                '<svg xmlns="http://www.w3.org/2005/svg" viewBox="0 0 24 24" width="14" height="14" style="fill: currentColor; vertical-align: middle;"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>', 
+                'image/svg+xml'
+            );
+            copyBtn.appendChild(svgDoc.documentElement);
+
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const plainText = getPlainTextFromHTML(release.description);
+                const textToCopy = `[${release.type}] ${release.date} - ${plainText.trim()}\nSource: ${release.link}`;
+                
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    copyBtn.classList.add('copied');
+                    copyBtn.replaceChildren();
+                    const checkSvgDoc = new DOMParser().parseFromString(
+                        '<svg xmlns="http://www.w3.org/2005/svg" viewBox="0 0 24 24" width="14" height="14" style="fill: var(--color-feature); vertical-align: middle;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+                        'image/svg+xml'
+                    );
+                    copyBtn.appendChild(checkSvgDoc.documentElement);
+                    
+                    setTimeout(() => {
+                        copyBtn.classList.remove('copied');
+                        copyBtn.replaceChildren();
+                        copyBtn.appendChild(svgDoc.documentElement);
+                    }, 1500);
+                }).catch(err => {
+                    console.error('Failed to copy: ', err);
+                });
+            });
+
+            actionsContainer.appendChild(badge);
+            actionsContainer.appendChild(copyBtn);
+
             header.appendChild(date);
-            header.appendChild(badge);
+            header.appendChild(actionsContainer);
 
             // Card Body (Description)
             const body = document.createElement('div');
@@ -287,5 +329,48 @@ document.addEventListener('DOMContentLoaded', () => {
         tweetActionBar.classList.remove('visible');
         tweetBtn.removeAttribute('href');
         selectionPreviewText.textContent = '';
+    }
+
+    // Get current filtered list of release notes
+    function getFilteredReleases() {
+        return allReleases.filter(release => {
+            const matchesType = activeFilter === 'all' || release.type === activeFilter;
+            const plainTextDesc = getPlainTextFromHTML(release.description).toLowerCase();
+            const matchesSearch = searchQuery === '' || 
+                release.type.toLowerCase().includes(searchQuery) ||
+                release.date.toLowerCase().includes(searchQuery) ||
+                plainTextDesc.includes(searchQuery);
+            return matchesType && matchesSearch;
+        });
+    }
+
+    // Export current filtered results to CSV file
+    function exportToCSV() {
+        const filtered = getFilteredReleases();
+        if (filtered.length === 0) {
+            return;
+        }
+
+        const headers = ['Date', 'Type', 'Description', 'Link'];
+        const rows = filtered.map(r => {
+            const cleanDesc = getPlainTextFromHTML(r.description).replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+            return [
+                r.date,
+                r.type,
+                cleanDesc,
+                r.link
+            ].map(val => `"${val.replace(/"/g, '""')}"`).join(',');
+        });
+
+        const csvContent = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `bigquery_releases_${activeFilter}_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 });
