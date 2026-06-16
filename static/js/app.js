@@ -176,8 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 svg.setAttribute("viewBox", "0 0 24 24");
                 svg.setAttribute("width", "14");
                 svg.setAttribute("height", "14");
-                svg.style.fill = color;
-                svg.style.verticalAlign = "middle";
+                svg.setAttribute("fill", color);
+                svg.setAttribute("style", "vertical-align: middle;");
                 const path = document.createElementNS("http://www.w3.org/2005/svg", "path");
                 path.setAttribute("d", pathD);
                 svg.appendChild(path);
